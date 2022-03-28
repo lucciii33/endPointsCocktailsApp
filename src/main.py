@@ -9,6 +9,7 @@ from flask_cors import CORS
 from utils import APIException, generate_sitemap
 from admin import setup_admin
 from models import db, User
+from dataregistration import UserStructure
 #from models import Person
 
 app = Flask(__name__)
@@ -20,6 +21,8 @@ db.init_app(app)
 CORS(app)
 setup_admin(app)
 
+newuser = UserStructure('tom')
+
 # Handle/serialize errors like a JSON object
 @app.errorhandler(APIException)
 def handle_invalid_usage(error):
@@ -30,11 +33,43 @@ def handle_invalid_usage(error):
 def sitemap():
     return generate_sitemap(app)
 
-@app.route('/user', methods=['GET'])
+@app.route('/users', methods=['GET'])
 def handle_hello():
-
+    members = newuser.get_all_members()
     response_body = {
-        "msg": "Hello, this is your GET /user response "
+        "hello": "new User",
+        "Welcome": members
+    }
+
+    return jsonify(response_body), 200
+@app.route('/users/<int:id>', methods=['GET'])
+def handle_id(id):
+    member = newuser.get_member(id)
+    
+    return jsonify(member), 200
+
+@app.route('/users', methods=['POST'])
+def post_member():
+    body = request.json
+    # this is how you can use the Family datastructure by calling its methods
+    newuser.add_member(body)
+    members = newuser.get_all_members()
+    response_body = {
+        "hello": "world",
+        "family": members
+    }
+
+
+    return jsonify(response_body), 200
+
+@app.route('/users/<int:id>', methods=['DELETE'])
+def delete_member(id):
+    # this is how you can use the Family datastructure by calling its methods
+    newuser.delete_members(id)
+    members = newuser.get_all_members()
+    response_body = {
+        "hello": "world",
+        "family": members
     }
 
     return jsonify(response_body), 200
